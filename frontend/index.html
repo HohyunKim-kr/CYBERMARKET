@@ -90,14 +90,13 @@
     }
     #cyber-dashboard {
       display: flex;
-      flex-direction: row;
+      flex-wrap: wrap;
       justify-content: space-around;
       background-color: rgba(0,0,0,0.7);
       padding: 20px;
       border-radius: 12px;
       border: 2px solid #00ffea;
       margin-bottom: 20px;
-      flex-wrap: wrap;
     }
     .gauge {
       width: 300px;
@@ -188,34 +187,15 @@
     </header>
 
     <div class="dashboard-panel">
-      <div class="panel">
-        <h3>Market Cap</h3>
-        <p id="market-cap">$0</p>
-        <div id="market-cap-change" class="change">0%</div>
-      </div>
-      <div class="panel">
-        <h3>BTC Dominance</h3>
-        <p id="btc-dominance">0%</p>
-      </div>
-      <div class="panel">
-        <h3>ETH Dominance</h3>
-        <p id="eth-dominance">0%</p>
-      </div>
-      <div class="panel">
-        <h3>Fear & Greed</h3>
-        <p id="fear-greed">0/100</p>
-      </div>
+      <div class="panel"><h3>Market Cap</h3><p id="market-cap">$0</p><div id="market-cap-change" class="change">0%</div></div>
+      <div class="panel"><h3>BTC Dominance</h3><p id="btc-dominance">0%</p></div>
+      <div class="panel"><h3>ETH Dominance</h3><p id="eth-dominance">0%</p></div>
+      <div class="panel"><h3>Fear & Greed</h3><p id="fear-greed">0/100</p></div>
     </div>
 
     <div id="cyber-dashboard">
-      <div class="gauge">
-        <canvas id="btc-gauge"></canvas>
-        <div class="cyber-text">BTC Dominance</div>
-      </div>
-      <div class="gauge">
-        <canvas id="eth-gauge"></canvas>
-        <div class="cyber-text">ETH Dominance</div>
-      </div>
+      <div class="gauge"><canvas id="btc-gauge"></canvas><div class="cyber-text">BTC Dominance</div></div>
+      <div class="gauge"><canvas id="eth-gauge"></canvas><div class="cyber-text">ETH Dominance</div></div>
     </div>
 
     <div class="table-section">
@@ -243,7 +223,7 @@
   <script>
     const BACKEND_URL = "http://localhost:3000/api/all-data";
     const CACHE_KEY = "coinMarketCapData";
-    const CACHE_DURATION = 10 * 60 * 1000; // 10분
+    const CACHE_DURATION = 10 * 60 * 1000;
     let currentPage = 1;
     const itemsPerPage = 10;
     let allCoins = [];
@@ -278,11 +258,9 @@
       const changeEl = document.getElementById("market-cap-change");
       changeEl.textContent = `${change.toFixed(2)}%`;
       changeEl.className = `change ${change >= 0 ? 'positive' : 'negative'}`;
-
       document.getElementById("btc-dominance").textContent = `${global.btc_dominance.toFixed(1)}%`;
       document.getElementById("eth-dominance").textContent = `${global.eth_dominance.toFixed(1)}%`;
       document.getElementById("fear-greed").textContent = `${Math.floor(Math.random()*100)}/100`;
-
       drawGauge("btc-gauge", global.btc_dominance);
       drawGauge("eth-gauge", global.eth_dominance);
 
@@ -297,14 +275,20 @@
       const tbody = document.getElementById("crypto-table");
       tbody.innerHTML = "";
       const start = (currentPage - 1) * itemsPerPage;
-      const end = start + itemsPerPage;
-      const coins = allCoins.slice(start, end);
+      const coins = allCoins.slice(start, start + itemsPerPage);
 
       coins.forEach((coin, index) => {
         const row = document.createElement("tr");
         row.innerHTML = `
           <td>${start + index + 1}</td>
-          <td><a href="coin.html?symbol=${coin.symbol}" style="color:#00ffea;text-decoration:underline;">${coin.name} (${coin.symbol})</a></td>
+          <td>
+            <a href="coin.html?symbol=${coin.symbol}" 
+              style="color:#00ffea;text-decoration:underline;"
+              onclick='localStorage.setItem("selectedCoin", JSON.stringify(${JSON.stringify(coin)}))'>
+              ${coin.name} (${coin.symbol})
+            </a>
+          </td>
+
           <td>$${formatNumber(coin.quote.USD.price)}</td>
           <td class="change ${coin.quote.USD.percent_change_1h >= 0 ? 'positive' : 'negative'}">${coin.quote.USD.percent_change_1h.toFixed(2)}%</td>
           <td class="change ${coin.quote.USD.percent_change_24h >= 0 ? 'positive' : 'negative'}">${coin.quote.USD.percent_change_24h.toFixed(2)}%</td>
@@ -318,19 +302,18 @@
     }
 
     function renderPagination() {
-      const totalPages = Math.ceil(allCoins.length / itemsPerPage);
       const pagination = document.getElementById("pagination");
       pagination.innerHTML = "";
-
+      const totalPages = Math.ceil(allCoins.length / itemsPerPage);
       for (let i = 1; i <= totalPages; i++) {
         const btn = document.createElement("button");
         btn.textContent = i;
         if (i === currentPage) btn.classList.add("active");
-        btn.addEventListener("click", () => {
+        btn.onclick = () => {
           currentPage = i;
           renderTable();
           renderPagination();
-        });
+        };
         pagination.appendChild(btn);
       }
     }
@@ -355,24 +338,21 @@
       });
     }
 
+    function formatNumber(num) {
+      return Number(num).toLocaleString("en-US", { maximumFractionDigits: 2 });
+    }
+
     window.onload = () => {
       if (isCacheValid()) {
-        console.log("✅ 캐시 사용 중");
         renderDashboard(getCachedData());
       } else {
-        console.log("🚀 API 요청 실행 중...");
         fetchDashboardData();
       }
     };
 
     window.onbeforeunload = () => {
       localStorage.removeItem(CACHE_KEY);
-      console.log("🧹 캐시 삭제됨 (페이지 종료)");
     };
-
-    function formatNumber(num) {
-      return Number(num).toLocaleString("en-US", { maximumFractionDigits: 2 });
-    }
   </script>
 </body>
 </html>
