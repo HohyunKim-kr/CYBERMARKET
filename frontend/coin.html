@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Coin Detail</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      background-color: #0f0c29;
+      color: #00ffea;
+      font-family: 'Orbitron', sans-serif;
+      padding: 20px;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+      border: 2px solid #00ffea;
+      padding: 20px;
+      border-radius: 12px;
+      background-color: rgba(0,0,0,0.7);
+    }
+    h1 {
+      color: #ff00c8;
+      margin-bottom: 20px;
+    }
+    .detail-row {
+      margin-bottom: 10px;
+    }
+    .label {
+      color: #ff00c8;
+      font-weight: bold;
+    }
+    #chart-container {
+      margin-top: 40px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="coin-detail">
+    <h1>Loading...</h1>
+  </div>
+
+  <div class="container" id="chart-container" style="display:none;">
+    <canvas id="price-chart" height="200"></canvas>
+  </div>
+
+  <script>
+    function getQueryParam(name) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(name);
+    }
+
+    function formatNumber(num) {
+      return Number(num).toLocaleString("en-US", { maximumFractionDigits: 2 });
+    }
+
+    const symbol = getQueryParam('symbol');
+    const container = document.getElementById('coin-detail');
+    const cached = localStorage.getItem("coinMarketCapData");
+
+    if (cached) {
+      const data = JSON.parse(cached).data;
+      const coin = data.cryptoLatest.data.find(c => c.symbol === symbol);
+
+      if (coin) {
+        container.innerHTML = `
+          <h1><img src="https://s2.coinmarketcap.com/static/img/coins/64x64/${coin.id}.png" width="32" height="32" style="vertical-align:middle;margin-right:10px;">${coin.name} (${coin.symbol})</h1>
+          <div class="detail-row"><span class="label">Price:</span> $${formatNumber(coin.quote.USD.price)}</div>
+          <div class="detail-row"><span class="label">Market Cap:</span> $${formatNumber(coin.quote.USD.market_cap)}</div>
+          <div class="detail-row"><span class="label">Volume (24h):</span> $${formatNumber(coin.quote.USD.volume_24h)}</div>
+          <div class="detail-row"><span class="label">Change 1h:</span> ${coin.quote.USD.percent_change_1h.toFixed(2)}%</div>
+          <div class="detail-row"><span class="label">Change 24h:</span> ${coin.quote.USD.percent_change_24h.toFixed(2)}%</div>
+          <div class="detail-row"><span class="label">Change 7d:</span> ${coin.quote.USD.percent_change_7d.toFixed(2)}%</div>
+          <div class="detail-row"><span class="label">Circulating Supply:</span> ${formatNumber(coin.circulating_supply)} ${coin.symbol}</div>
+        `;
+
+        // 임의의 과거 가격 시뮬레이션 데이터 생성
+        const prices = [
+          coin.quote.USD.price * 0.95,
+          coin.quote.USD.price * 0.97,
+          coin.quote.USD.price * 1.01,
+          coin.quote.USD.price * 1.03,
+          coin.quote.USD.price * 0.99,
+          coin.quote.USD.price * 1.02,
+          coin.quote.USD.price
+        ];
+
+        const ctx = document.getElementById("price-chart").getContext("2d");
+        document.getElementById("chart-container").style.display = "block";
+
+        new Chart(ctx, {
+          type: "line",
+          data: {
+            labels: ["6d ago", "5d", "4d", "3d", "2d", "1d", "Today"],
+            datasets: [{
+              label: `${coin.name} Price`,
+              data: prices,
+              borderColor: "#00ffea",
+              backgroundColor: "transparent",
+              tension: 0.2
+            }]
+          },
+          options: {
+            plugins: { legend: { labels: { color: '#00ffea' } } },
+            scales: {
+              x: { ticks: { color: '#00ffea' } },
+              y: { ticks: { color: '#00ffea' } }
+            }
+          }
+        });
+
+      } else {
+        container.innerHTML = `<h1>Coin ${symbol} not found</h1>`;
+      }
+    } else {
+      container.innerHTML = `<h1>데이터가 없습니다. 메인 페이지에서 다시 시도해주세요.</h1>`;
+    }
+  </script>
+</body>
+</html>
