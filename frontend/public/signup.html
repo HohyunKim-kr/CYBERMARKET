@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cyberpunk Signup</title>
+  <link rel="stylesheet" href="./css/signup.css">
+</head>
+<body>
+  <div class="container">
+    <h1>회원가입</h1>
+    <input type="text" id="newUsername" placeholder="아이디" />
+    <input type="password" id="newPassword" placeholder="비밀번호" />
+    <input type="text" id="nickname" placeholder="닉네임" />
+    <input type="email" id="email" placeholder="이메일" />
+    <input type="tel" id="phone" placeholder="휴대폰 번호 (예: 010-1234-5678)" />
+    <input type="date" id="birth" placeholder="생년월일" style="color:#00ffea;" />
+    <select id="gender" required>
+      <option value="" disabled selected hidden>성별 선택</option>
+      <option value="male">남성</option>
+      <option value="female">여성</option>
+      <option value="other">기타</option>
+    </select>
+    <button onclick="signup()">회원가입</button>
+    <div class="switch">
+      이미 계정이 있으신가요? <a href="./login.html">로그인</a>
+    </div>
+  </div>
+
+  <script src="./js/signup.js"></script>
+</body>
+</html>

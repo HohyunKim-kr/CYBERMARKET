@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DEX Overview Dashboard</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background: #0f0c29;
+      color: #00ffea;
+      font-family: 'Arial', sans-serif;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    h1, h2 {
+      color: #00ffea;
+      text-align: center;
+      margin-bottom: 20px;
+      font-weight: 500;
+    }
+    h1 {
+      font-size: 2rem;
+    }
+    h2 {
+      font-size: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .dex-section {
+      margin-bottom: 40px;
+      max-width: 1200px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #1a1a3d;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 12px;
+      text-align: left;
+      font-size: 0.9rem;
+      border-bottom: 1px solid #333;
+    }
+    th {
+      background: #2a2a5e;
+      color: #00ffea;
+      font-weight: 500;
+      text-transform: uppercase;
+    }
+    td {
+      color: #e0e0ff;
+    }
+    tr {
+      cursor: pointer;
+    }
+    tr:hover {
+      background: #2a2a5e;
+    }
+    .error {
+      color: #ff4d4d;
+      text-align: center;
+      padding: 10px;
+      font-weight: 500;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.85);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .modal-content {
+      background: #1a1a3d;
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 500px;
+      width: 90%;
+      color: #e0e0ff;
+    }
+    .modal-content h3 {
+      color: #40c4ff;
+      margin-bottom: 15px;
+      word-wrap: break-word;
+    }
+    .modal-content p {
+      margin-bottom: 10px;
+      font-size: 0.95rem;
+      word-wrap: break-word;
+    }
+    .modal-content a {
+      color: #00ffea;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .modal-content a:hover {
+      text-decoration: underline;
+    }
+    .modal-close {
+      margin-top: 20px;
+      padding: 8px 16px;
+      background: #00ffea;
+      border: none;
+      border-radius: 5px;
+      color: #0f0c29;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background 0.3s ease;
+    }
+    .modal-close:hover {
+      background: #00d4c2;
+    }
+    @media (max-width: 600px) {
+      h1 { font-size: 1.5rem; }
+      h2 { font-size: 1.2rem; }
+      th, td { font-size: 0.8rem; padding: 8px; }
+    }
+  </style>
+</head>
+<body>
+  <h1>📊 DEX 통합 대시보드</h1>
+  <div id="dex-quotes" class="dex-section"></div>
+  <div id="dex-networks" class="dex-section"></div>
+
+  <!-- Modal -->
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <div id="modal-body"></div>
+      <button class="modal-close" onclick="closeModal()">닫기</button>
+    </div>
+  </div>
+
+  <script>
+    let dexListingsInfoData = [];
+
+    async function fetchDexData() {
+      try {
+        const res = await fetch("http://localhost:3000/api/all-data");
+        if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
+        const data = await res.json();
+
+        dexListingsInfoData = data.dexListingsInfo?.data || [];
+        renderQuotes(data.dexListingsQuotes?.data || []);
+        renderNetworks(data.dexNetworks?.data || []);
+
+      } catch (err) {
+        console.error("❌ 데이터 로딩 실패:", err);
+        document.body.innerHTML += `<p class="error">❌ 데이터를 불러오는 중 오류 발생: ${err.message}</p>`;
+      }
+    }
+
+    function renderQuotes(quotes) {
+      const section = document.getElementById("dex-quotes");
+      let html = `<h2>📈 DEX Listings Quotes</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>DEX</th>
+              <th>거래쌍 수</th>
+              <th>24h 거래량 (USD)</th>
+              <th>24h 트랜잭션 수</th>
+            </tr>
+          </thead>
+          <tbody>`;
+
+      quotes.slice(0, 20).forEach((dex, idx) => {
+        const q = dex.quote?.[0] || {};
+        html += `
+          <tr data-id="${dex.id}">
+            <td>${idx + 1}</td>
+            <td>${dex.name || 'N/A'}</td>
+            <td>${dex.num_market_pairs || 'N/A'}</td>
+            <td>$${Number(q.volume_24h || 0).toLocaleString()}</td>
+            <td>${Number(q.num_transactions_24h || 0).toLocaleString()}</td>
+          </tr>`;
+      });
+
+      html += "</tbody></table>";
+      section.innerHTML = html;
+
+      document.querySelectorAll('#dex-quotes tr').forEach(row => {
+        row.addEventListener('click', () => {
+          const dexId = row.getAttribute('data-id');
+          const dexInfo = dexListingsInfoData.find(info => info.id == dexId);
+          if (dexInfo) {
+            showModal(dexInfo);
+          } else {
+            showModal({ name: row.querySelector('td:nth-child(2)').textContent, slug: 'N/A', status: 'N/A', date_launched: 'N/A', notice: '정보 없음' });
+          }
+        });
+      });
+    }
+
+    function renderNetworks(networks) {
+      const section = document.getElementById("dex-networks");
+      if (!Array.isArray(networks) || networks.length === 0) {
+        section.innerHTML = `<h2>🛰️ DEX Networks</h2><p class="error">❌ 네트워크 정보 없음</p>`;
+        return;
+      }
+
+      let html = `<h2>🛰️ DEX Networks</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>이름</th>
+              <th>슬러그</th>
+            </tr>
+          </thead>
+          <tbody>`;
+
+      networks.slice(0, 20).forEach(net => {
+        html += `
+          <tr>
+            <td>${net.id || 'N/A'}</td>
+            <td>${net.name || 'N/A'}</td>
+            <td>${net.network_slug || 'N/A'}</td>
+          </tr>`;
+      });
+
+      html += "</tbody></table>";
+      section.innerHTML = html;
+    }
+
+    function showModal(data) {
+      const modal = document.getElementById("modal");
+      const body = document.getElementById("modal-body");
+      body.innerHTML = `
+        <h3>${data.name || 'N/A'}</h3>
+        <p><strong>Slug:</strong> ${data.slug || 'N/A'}</p>
+        <p><strong>Status:</strong> ${data.status || 'N/A'}</p>
+        <p><strong>Launched:</strong> ${data.date_launched?.split("T")[0] || "N/A"}</p>
+        <p><strong>Notice:</strong> ${data.notice || "없음"}</p>
+        <p><strong>웹사이트:</strong> ${
+          data.urls?.website?.[0]
+            ? `<a href="${data.urls.website[0]}" target="_blank">${data.urls.website[0]}</a>`
+            : "없음"
+        }</p>`;
+      modal.style.display = "flex";
+    }
+
+    function closeModal() {
+      document.getElementById("modal").style.display = "none";
+    }
+
+    window.onload = fetchDexData;
+  </script>
+</body>
+</html>

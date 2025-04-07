@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cyberpunk Coin Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="./css/index.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">CYBERMARKET</div>
+      <nav>
+        <a href="#">Coins</a>
+        <a href="./dex.html">Dex</a>
+        <a href="#">Exchanges</a>
+        <a href="#">AI Bots</a>
+        <a href="#">Settings</a>
+      </nav>
+      <button class="auth-button" onclick="location.href='./login.html'">로그인 / 회원가입</button>
+    </header>
+
+    <div class="dashboard-panel">
+      <div class="panel"><h3>Market Cap</h3><p id="market-cap">$0</p><div id="market-cap-change" class="change">0%</div></div>
+      <div class="panel"><h3>BTC Dominance</h3><p id="btc-dominance">0%</p></div>
+      <div class="panel"><h3>ETH Dominance</h3><p id="eth-dominance">0%</p></div>
+      <div class="panel"><h3>Fear & Greed</h3><p id="fear-greed">0/100</p></div>
+    </div>
+
+    <div id="cyber-dashboard">
+      <div class="gauge"><canvas id="btc-gauge"></canvas><div class="cyber-text">BTC Dominance</div></div>
+      <div class="gauge"><canvas id="eth-gauge"></canvas><div class="cyber-text">ETH Dominance</div></div>
+    </div>
+
+    <div class="table-section">
+      <h2>Top Cryptocurrencies</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Price</th>
+            <th>1h%</th>
+            <th>24h%</th>
+            <th>7d%</th>
+            <th>Market Cap</th>
+            <th>Volume (24h)</th>
+            <th>Circulating Supply</th>
+          </tr>
+        </thead>
+        <tbody id="crypto-table"></tbody>
+      </table>
+      <div class="pagination" id="pagination"></div>
+    </div>
+  </div>
+
+  <script src="./js/index.js"></script>
+</body>
+</html>
