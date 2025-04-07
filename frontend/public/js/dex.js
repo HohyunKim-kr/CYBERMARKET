@@ -2,7 +2,7 @@ let dexListingsInfoData = [];
 
 async function fetchDexData() {
   try {
-    const res = await fetch("http://localhost:3000/api/all-data"); 
+    const res = await fetch("hhttps://cybermarket.onrender.com/api/all-data"); 
     if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
     const data = await res.json();
 

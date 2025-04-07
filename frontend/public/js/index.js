@@ -1,4 +1,4 @@
-const BACKEND_URL = "http://localhost:3000/api/all-data";
+const BACKEND_URL = "https://cybermarket.onrender.com/api/all-data";
 const CACHE_KEY = "coinMarketCapData";
 const CACHE_DURATION = 10 * 60 * 1000;
 let currentPage = 1;
